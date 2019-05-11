@@ -146,3 +146,5 @@ class Colors:
         self.whitesmoke = 'rgb(245,245,245)'
         self.yellow = 'rgb(255,255,0)'
         self.yellowgreen = 'rgb(154,205,50)'
+
+        
