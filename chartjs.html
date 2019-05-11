@@ -1,0 +1,110 @@
+{% comment %}
+# This is Chartjs html-template for generation different types of Chartjs charts. More info on: www.chartjs.org
+# Template version 1.0
+#
+#  Input parameters:
+#   chartjs - dictionary object contains all parameters for configuration and styling chart. It may consist of
+#             following KEY: VALUE attributes:
+#       id (string) MANDATORY - chart id postfix which will be used for manipulation with chart (id='chart_'+id)
+#       type (string) - type of chart. Default value is 'bar'
+#       data (dict) - The dictionary object which represent chart data (labels and datasets)
+#       stacked (bool) - Set True if you need stacked chart. Default value is False
+#       height (int) - chart height. Default value is 120
+#       width (int) - chart width
+#       style (string) - style attributes which will be added into CANVAS tag
+#       src_add (bool) - Set True if you need to add SCRIPT tag with src to Chart.bundle.min.js
+#       src_alt (string) - Alternative path to Chart.bundle.min.js if needed. Applicable only  if src_add is True
+#       legend_display (bool) - Set False if you need hide the chart legent. Default value is True
+#       legend_position (string) - Position of the legend. Default value 'bottom'
+#       legend_alt (dict) - Chart legend alternative configuration options. Replace everything in block legend
+#       title_text (string) - Text displayed on the title of chart
+#       title_alt (dict) - Chart title alternative configuration options. Replace everything in block title
+#       yAxies_label (string) - The label which will be displayed on yAxies in the chart
+#       yAxies_alt (list[dict]) - Chart yAxies alternative configuration options. Replace everything in block yAxies
+#       xAxies_alt (list[dict]) - Chart xAxies alternative configuration options. Replace everything in block xAxies
+#       tooltips_display (bool) - Set False if you need hide the chart tooltips. Default value is True
+#       tooltips_alt (dict) - Chart tooltips alternative configuration options. Replace everything in block tooltips
+#       labels_plugin_add (bool) - True if you need to add javascript file for data labels on the chart
+#       labels_plugin_display (bool) - True if you need to add data labels on the chart
+#       labels_plugin_color (string) - Set data labels color. Default value is '#000000'
+#       labels_plugin_anchor (string) - Defines the position of the data label: start, center, end. Default value is 'end'
+#       labels_plugin_rotation (int) - Rotation angle (in degrees) of the data label. Default value is 0 (no rotation)
+#       labels_plugin_alt (dict) - Data Labels alternative configuration options. Replace everything in block datalabels
+{% endcomment %}
+{% load static %}
+{% spaceless %}
+<canvas id="chart_{{ chartjs.id }}"
+        style={% if chartjs.style is None %}"min-width: 310px; margin: 0 auto"{% else %}"{{ chartjs.style }}"{% endif %}
+        {% if chartjs.height is None %}height="120"{% else %}height="{{ chartjs.height }}"{% endif %}
+        {% if chartjs.width is not None %}width="{{ chartjs.width }}"{% endif %}></canvas>
+{% if chartjs.src_add is True %}
+{% if chartjs.src_alt is not None %}
+<script src="{{ chartjs.src_alt }}"></script>
+{% else %}
+<script src="{% static 'chartjs/2.8.0/Chart.bundle.min.js' %}"></script>
+{% endif %}
+{% endif %}
+{% if chartjs.labels_plugin_add is True %}
+<script src="{% static 'chartjs/plugins/chartjs-plugin-datalabels.min.js' %}"></script>
+{% endif %}
+<script>
+{% autoescape off %}
+var chart_{{ chartjs.id }} = document.getElementById('chart_{{ chartjs.id }}').getContext('2d');
+window.chart_{{ chartjs.id }} = new Chart(chart_{{ chartjs.id }}, {
+	type: {% if chartjs.type is None %}'bar'{% else %}'{{ chartjs.type }}'{% endif %},
+	{% if chartjs.data is not None %}data: {{ chartjs.data }},{% endif %}
+	options: {
+		responsive: true,
+		{% if chartjs.labels_plugin_display is True %}
+		plugins: {
+            datalabels: {% if chartjs.labels_plugin_alt is None %}{
+                color: {% if chartjs.labels_plugin_color is None %}'#000000'{% else %}'{{ chartjs.labels_plugin_color }}'{% endif %},
+                clamp: true,
+                anchor: {% if chartjs.labels_plugin_anchor is None %}'end'{% else %}'{{ chartjs.labels_plugin_anchor }}'{% endif %},
+                display: 'auto',
+                rotation: {% if chartjs.labels_plugin_rotation is None %}0{% else %}{{ chartjs.labels_plugin_rotation }}{% endif %},
+                align: 'end',
+            }{% else %}{{ chartjs.labels_plugin_alt }}{% endif %}
+        },{% endif %}
+		{% if chartjs.legend_alt is None %}
+		legend: {
+		    {% if chartjs.legend_display is False %}display: false,{% endif %}
+		    position: {% if chartjs.legend_position is None %}'bottom'{% else %}'{{ chartjs.legend_position }}'{% endif %},
+		},{% else %}legend: {{chartjs.legend_alt}}, {% endif %}
+		{% if chartjs.title_alt is None %}
+		{% if chartjs.title_text is not None %}
+		title: {
+			display: true,
+			padding: 5,
+			text: '{{ chartjs.title_text }}'
+		},{% endif %}
+		{% else %}title: {{chartjs.title_alt}},{% endif %}
+		scales: {
+		    {% if chartjs.xAxies_alt is None %}
+		    {% if chartjs.stacked is True %}
+		    xAxes: [{ stacked: true, }],
+		    {% endif %}
+		    {% else %}xAxes: {{ chartjs.xAxies_alt }},{% endif %}
+		    {% if chartjs.yAxies_alt is None %}
+			yAxes: [{
+				display: true,
+				ticks: { min: 0 },
+				{% if chartjs.stacked is True %}stacked: true,{% endif %}
+				scaleLabel: {
+					display: true,
+					labelString: '{{chartjs.yAxies_label}}'
+				}
+			}]
+			{% else %}yAxes: {{ chartjs.yAxies_alt }}{% endif %}
+		},
+		{% if chartjs.tooltips_alt is None %}
+		tooltips: {
+		    {% if chartjs.tooltips_display is False %}enabled: false,{% endif %}
+			mode: 'index',
+			intersect: false,
+		}
+		{% else %}tooltips: {{ chartjs.yAxies_alt }}{% endif %}
+	}
+});
+{% endautoescape %}{% endspaceless %}
+</script>
